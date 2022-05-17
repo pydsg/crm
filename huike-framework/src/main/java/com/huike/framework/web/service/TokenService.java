@@ -1,12 +1,5 @@
 package com.huike.framework.web.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import javax.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import com.huike.common.constant.Constants;
 import com.huike.common.core.domain.model.LoginUser;
 import com.huike.common.core.redis.RedisCache;
@@ -19,6 +12,14 @@ import eu.bitwalker.useragentutils.UserAgent;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * token验证处理
@@ -99,7 +100,9 @@ public class TokenService {
     public String createToken(LoginUser loginUser) {
         String token = IdUtils.fastUUID();
         loginUser.setToken(token);
+        //设置ip、浏览器、系统信息
         setUserAgent(loginUser);
+        //重新缓存到redis
         refreshToken(loginUser);
 
         Map<String, Object> claims = new HashMap<>();
@@ -108,6 +111,7 @@ public class TokenService {
         claims.put("username",loginUser.getUsername());
         claims.put("nickName",loginUser.getUser().getNickName());
         claims.put("createTime",loginUser.getUser().getCreateTime());
+        //创建token
         return createToken(claims);
     }
 

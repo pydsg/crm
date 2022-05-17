@@ -1,13 +1,14 @@
 package com.huike.clues.domain;
 
-import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.huike.common.annotation.Excel;
+import com.huike.common.core.domain.BaseEntity;
 import com.huike.common.utils.DateUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import com.huike.common.annotation.Excel;
-import com.huike.common.core.domain.BaseEntity;
+
+import java.util.Date;
 
 /**
  * 线索管理对象 tb_clue
@@ -356,7 +357,7 @@ public class TbClue extends BaseEntity {
         UNFOLLOWED("待跟进","1"),
         FOLLOWING("跟进中","2"),
         RECOVERY("回收","3"),
-        FALSE("伪线索/踢回公海","4"),
+        FALSE("伪线索/退回公海","4"),
         DELETED("删除","5"),
         TOBUSINESS("转换商机","6"),
         TOCUSTOMER("转换客户","7");

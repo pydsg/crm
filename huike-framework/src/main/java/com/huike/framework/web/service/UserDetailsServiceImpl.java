@@ -31,6 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        //根据用户名查询
         SysUser user = userService.selectUserByUserName(username);
         if (StringUtils.isNull(user)) {
             log.info("登录用户：{} 不存在.", username);
@@ -44,7 +45,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             log.info("登录用户：{} 已被停用.", username);
             throw new BaseException("对不起，您的账号：" + username + " 已停用");
         }
-
+        //返回包含用户信息+权限的UserDetails对象
         return createLoginUser(user);
     }
 
