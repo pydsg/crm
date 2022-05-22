@@ -93,7 +93,7 @@ public class SysMenuServiceImpl implements ISysMenuService
         {
             if (StringUtils.isNotEmpty(perm))
             {
-                permsSet.addAll(Arrays.asList(perm.trim().split(",")));
+                permsSet.add(perm.trim());
             }
         }
         return permsSet;
