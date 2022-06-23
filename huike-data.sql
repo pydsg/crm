@@ -13,7 +13,7 @@ CREATE TABLE `mybatis_review` (
   `sex` varchar(2) CHARACTER SET utf8mb4 NOT NULL DEFAULT '男' COMMENT '性别',
   `create_by` varchar(100) CHARACTER SET utf8mb4 NOT NULL DEFAULT '1' COMMENT '创建人',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_user` varchar(100) CHARACTER SET utf8mb4 NOT NULL DEFAULT '1' COMMENT '修改人',
+  `update_by` varchar(100) CHARACTER SET utf8mb4 NOT NULL DEFAULT '1' COMMENT '修改人',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4;
