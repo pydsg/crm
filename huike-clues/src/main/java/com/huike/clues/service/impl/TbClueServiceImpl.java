@@ -290,12 +290,19 @@ public class TbClueServiceImpl implements ITbClueService {
 	public String gain(Long[] clueIds, Long userId) {
 		// 是否批量捞取
 		boolean isBatch = clueIds.length > 1 ? true : false;
+		//@获取最大保有量
 		TbRulePool rulePool = rulePoolService.selectTbRulePoolByType(TbRulePool.RuleType.CLUES.getValue());
-		// 统计当前分配人所有线索
+		// 统计当前分配人所有线索数量
 		int asignRecords = assignRecordMapper.countAssignCluesByUser(userId);
+		//@判断当前用户的线索数量是否超过最大保有量
 		if (asignRecords >= rulePool.getMaxNunmber()) {
-			throw new CustomException("捞取失败！最大保有量(" + rulePool.getMaxNunmber() + ")，剩余可以捞取"+(rulePool.getMaxNunmber()-asignRecords)+"条线索");
+			Long num;
+			if((num = rulePool.getMaxNunmber()-asignRecords) <= 0){
+				num = 0l;
+			}
+			throw new CustomException("捞取失败！最大保有量(" + rulePool.getMaxNunmber() + ")，剩余可以捞取"+num+"条线索");
 		}
+		//@开始一条一条的捞取数据，并判断是否有超过最大保有量
 		for (int i = 0; i < clueIds.length; i++) {
 			Long clueId = clueIds[i];
 
@@ -306,6 +313,8 @@ public class TbClueServiceImpl implements ITbClueService {
 			// 最近捞取记录
 			TbAssignRecord assignRecord = assignRecordMapper.selectAssignRecordByAssignId(clueId,
 					TbAssignRecord.RecordType.CLUES.getValue());
+			//@判断查询的分配记录对象是否存在且用户id是否对得上
+			//@分配记录对象为空表示该用户没捞过线索，则不用判断是否在限制时间内，直接跳过该判断
 			if (assignRecord != null && assignRecord.getUserId().equals(userId)) {
 				Date repeatGetTime = JobUtils.getDate(rulePool.getRepeatGetTime().intValue(), rulePool.getRepeatType(),
 						assignRecord.getCreateTime());
@@ -320,6 +329,7 @@ public class TbClueServiceImpl implements ITbClueService {
 				}
 			}
 			// 捞取后下次跟进时间，及状态重置
+			//@修改该条线索的状态，将该线索从线索池捞出来
 			tbClueMapper.resetNextTimeAndStatus(clueId, TbClue.StatusType.UNFOLLOWED.getValue());
 			// 新建分配记录
 			TbAssignRecord tbAssignRecord = addNewRecord(clueId, userId);

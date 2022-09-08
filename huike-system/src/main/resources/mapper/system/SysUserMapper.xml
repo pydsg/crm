@@ -75,6 +75,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			AND (u.dept_id = #{deptId} OR u.dept_id IN ( SELECT t.dept_id FROM sys_dept t WHERE find_in_set(#{deptId}, ancestors) ))
 		</if>
 		<!-- 数据范围过滤 -->
+		<if test="null != phonenumber and '' != phonenumber">
+			and u.phonenumber = #{phonenumber}
+		</if>
 		<!-- 数据范围过滤 -->
 		<if test="params.dataScope != null and params.dataScope != ''">
 			AND (${params.dataScope})

@@ -1,5 +1,7 @@
 package com.huike.web.controller.clues;
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +62,8 @@ public class TbActivityController extends BaseController {
         TbActivity tbActivity =new TbActivity();
         tbActivity.setChannel(channel);
         tbActivity.setStatus("2");
+        tbActivity.setBeginTime(new Date());
+        tbActivity.setEndTime(new Date());
         return AjaxResult.success(tbActivityService.selectTbActivityList(tbActivity));
     }
 

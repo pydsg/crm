@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.huike.common.utils.uuid.UUID;
 import com.huike.common.utils.uuid.UUIDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -72,7 +73,10 @@ public class TbActivityServiceImpl implements ITbActivityService {
     @Transactional
     public int insertTbActivity(TbActivity tbActivity){
         tbActivity.setCreateTime(DateUtils.getNowDate());
+        //----------优化code重复问题，使用uuid来避免重复-----------
+        //已修改code生成的方法，改用uuid来避免重复
         tbActivity.setCode(getCode());
+        //---------------------
         tbActivity.setStatus("2");
         int rows= tbActivityMapper.insertTbActivity(tbActivity);
         loadAllActivityCode();
@@ -144,7 +148,13 @@ public class TbActivityServiceImpl implements ITbActivityService {
      */
     private String getCode(){
         //随机8位编码
-        String code= StringUtils.getRandom(8);
+        //String code= StringUtils.getRandom(8);
+
+        //-------------优化---------------
+        //修改code生成的方法，改用uuid来避免重复
+        String code = UUIDUtils.getUUID();
+        //-------------优化---------------
+
         //店铺校验
         Set<String> codeSets =  redisCache.getCacheSet(Constants.ACT_CODE_KEY);
         if(codeSets.contains(code)){
