@@ -17,4 +17,43 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="nextTime"    column="next_time"    />
     </resultMap>
 
+    <sql id="tbClueTrackRecord"> id, clue_id, `level`, subject, record, next_time, create_by, create_time</sql>
+
+    <insert id="addClueTrackRecord">
+        insert into tb_clue_track_record values(null, #{clueId}, #{level}, #{subject}, #{record}, #{nextTime}, #{createBy}, #{createTime})
+    </insert>
+
+    <update id="updateClue" parameterType="TbClue">
+        update tb_clue
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="channel != null and channel != ''">channel = #{channel},</if>
+            <if test="activityId != null">activity_id = #{activityId},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="weixin != null">weixin = #{weixin},</if>
+            <if test="qq != null">qq = #{qq},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="subject != null">subject = #{subject},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="owner != null">owner = #{owner},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="assignBy != null">assign_by = #{assignBy},</if>
+            <if test="assignTime != null">assign_time = #{assignTime},</if>
+            <if test="falseCount != null">false_count = #{falseCount},</if>
+            <if test="nextTime != null">next_time = #{nextTime},</if>
+            status = '2'
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectByClueId" resultType="com.huike.clues.domain.TbClueTrackRecord">
+        select
+        <include refid="tbClueTrackRecord"/>
+        from tb_clue_track_record
+        where clue_id = #{clueId}
+    </select>
+
 </mapper>

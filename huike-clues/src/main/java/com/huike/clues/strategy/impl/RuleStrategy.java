@@ -1,5 +1,6 @@
 package com.huike.clues.strategy.impl;
 
+import com.huike.clues.domain.TbAssignRecord;
 import com.huike.clues.domain.TbClue;
 import com.huike.clues.mapper.SysDictDataMapper;
 import com.huike.clues.mapper.SysUserMapper;
@@ -7,11 +8,15 @@ import com.huike.clues.mapper.TbAssignRecordMapper;
 import com.huike.clues.strategy.Rule;
 import com.huike.common.core.domain.entity.SysDictData;
 import com.huike.common.core.domain.entity.SysUser;
+import com.huike.common.utils.DateUtils;
+import com.huike.common.utils.SecurityUtils;
+import com.huike.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Date;
 import java.util.List;
 
 
@@ -78,7 +83,43 @@ public class RuleStrategy implements Rule {
          *  * 3.不满足规则的不进行分配，由管理员或主管来进行分配
          *  将该线索数据添加到线索表中，但不往分配记录表里添加数据
          */
-        return null;
+        //判空：若意向学科为空则直接反回
+        if(StringUtils.isBlank(clue.getSubject())) {
+            return false;
+        }
+        //分配
+        if(clue.getSubject().equals(subjectJAVA.getDictValue())) {
+            //java的分配给zhangsan
+            return distribute(clue, zhangsan);
+        } else if(clue.getSubject().equals(subjectHtml.getDictValue())) {
+            //前端的分配给zhangsan1
+            return distribute(clue, zhangsan1);
+        }else{
+            //不进行分配，不添加分配记录-----即待分配状态
+            return false;
+        }
+    }
+
+    /**
+     * 分配商机给具体用户的方法
+     * @param clue
+     * @param user
+     * @return
+     */
+    private Boolean distribute(TbClue clue,SysUser user){
+        try {
+            TbAssignRecord tbAssignRecord = new TbAssignRecord();
+            tbAssignRecord.setAssignId(clue.getId());
+            tbAssignRecord.setUserId(SecurityUtils.getAdmin());
+            tbAssignRecord.setUserName(user.getUserName());
+            tbAssignRecord.setDeptId(user.getDeptId());
+            tbAssignRecord.setCreateBy(SecurityUtils.getUsername());
+            tbAssignRecord.setCreateTime(new Date());
+            assignRecordMapper.insertAssignRecord(tbAssignRecord);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 }

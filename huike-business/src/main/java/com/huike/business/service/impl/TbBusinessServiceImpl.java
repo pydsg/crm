@@ -270,6 +270,7 @@ public class TbBusinessServiceImpl implements ITbBusinessService {
         int rows = tbBusinessMapper.insertTbBusiness(tbBusiness);
         //基于规则来进行分配
         Integer transForBusiness = rule.transforBusiness(tbBusiness);
+
         if (transForBusiness != 0) {
             return transForBusiness;
         } else {

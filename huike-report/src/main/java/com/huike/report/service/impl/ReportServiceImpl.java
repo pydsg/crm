@@ -3,14 +3,12 @@ package com.huike.report.service.impl;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.huike.report.domain.vo.*;
 import org.springframework.beans.BeanUtils;
@@ -33,6 +31,8 @@ import com.huike.contract.domain.TbContract;
 import com.huike.contract.mapper.TbContractMapper;
 import com.huike.report.mapper.ReportMapper;
 import com.huike.report.service.IReportService;
+
+import javax.xml.crypto.Data;
 
 @Service
 public class ReportServiceImpl implements IReportService {
@@ -356,16 +356,256 @@ public class ReportServiceImpl implements IReportService {
         String username = SecurityUtils.getUsername();
         try {
             //3 封装结果集对象
-            result.setCluesNum(reportMpper.getCluesNum(beginCreateTime, endCreateTime, username));
+            /*result.setCluesNum(reportMpper.getCluesNum(beginCreateTime, endCreateTime, username));
             result.setBusinessNum(reportMpper.getBusinessNum(beginCreateTime, endCreateTime, username));
             result.setContractNum(reportMpper.getContractNum(beginCreateTime, endCreateTime, username));
-            result.setSalesAmount(reportMpper.getSalesAmount(beginCreateTime, endCreateTime, username));
+            result.setSalesAmount(reportMpper.getSalesAmount(beginCreateTime, endCreateTime, username));*/
+
+            //**********************CompletableFuture优化************************
+            CompletableFuture<Integer> future1 = CompletableFuture.supplyAsync(()-> reportMpper.getCluesNum(beginCreateTime, endCreateTime, username));
+            CompletableFuture<Integer> future2 = CompletableFuture.supplyAsync(()->{
+                return reportMpper.getBusinessNum(beginCreateTime, endCreateTime, username);
+            });
+            CompletableFuture<Integer> future3 = CompletableFuture.supplyAsync(()->{
+                return reportMpper.getContractNum(beginCreateTime, endCreateTime, username);
+            });
+            CompletableFuture<Double> future4 = CompletableFuture.supplyAsync(()->{
+                return reportMpper.getSalesAmount(beginCreateTime, endCreateTime, username);
+            });
+
+            //多线程阻塞直至所有线程结束
+            CompletableFuture.allOf(future1,future2,future3, future4).join();
+
+            result.setCluesNum(future1.get());
+            result.setBusinessNum(future2.get());
+            result.setContractNum(future3.get());
+            result.setSalesAmount(future4.get());
+            //**********************CompletableFuture优化************************
         }catch (Exception e) {
             e.printStackTrace();
             return null;
         }
+
         //4 返回结果集对象
         return result;
+    }
+
+    /**
+     * 获取今日简报数据
+     * @return
+     */
+    @Override
+    public IndexTodayInfoVO getIndexTodoInfo() {
+
+        //新建IndexBaseInfoVO对象用来封装当天数据
+        IndexTodayInfoVO result = new IndexTodayInfoVO();
+        //获取当前时间
+        String nowDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        // 2.1 由于查询需要用到用户名 调用工具类获取用户名
+        String username = SecurityUtils.getUsername();
+        try {
+            //封装当前数据
+            //查询当天线索数量
+            result.setTodayCluesNum(reportMpper.getCluesCountByNowDate(nowDate, nowDate, username));
+            //查询当天的商机数
+            result.setTodayBusinessNum(reportMpper.getBusinessCountByNowDate(nowDate, nowDate, username));
+            //查询当天的合同数
+            result.setTodayContractNum(reportMpper.getContractCountByNowDate(nowDate, nowDate, username));
+            //查询当天销售额
+            result.setTodaySalesAmount(reportMpper.getSalesAmountByNowDate(nowDate, nowDate, username));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return result;
+    }
+
+    /**
+     * 待办事项
+     * @return
+     */
+    @Override
+    public IndexTodoInfoVO getIndexTodayInfo(String beginCreateTime, String endCreateTime) {
+
+        //新建IndexBaseInfoVO对象用来封装当天数据
+        IndexTodoInfoVO result = new IndexTodoInfoVO();
+        // 2.1 由于查询需要用到用户名 调用工具类获取用户名
+        String username = SecurityUtils.getUsername();
+        try {
+            //封装当前数据
+            //查询当月线索数量
+            result.setTofollowedCluesNum(reportMpper.getCluesCountByNowDate(beginCreateTime, endCreateTime, username));
+            //查询当月的商机数
+            result.setTofollowedBusinessNum(reportMpper.getBusinessCountByNowDate(beginCreateTime, endCreateTime, username));
+            //查询当月未被分配的线索数量
+            result.setToallocatedCluesNum(reportMpper.getNoCluesReport(beginCreateTime, endCreateTime));
+            //查询当月未被分配的商机数量
+            result.setToallocatedBusinessNum(reportMpper.getNoBusinessReport(beginCreateTime, endCreateTime));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return result;
+    }
+
+    /**
+     * 客户学科统计
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @Override
+    public List<CourseNumVO> courseStatistics(String beginCreateTime, String endCreateTime) {
+        //查询所有的学科
+        return reportMpper.courseStatistics(beginCreateTime,endCreateTime);
+    }
+
+    /**
+     * 新增线索数量统计
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @Override
+    public LineChartVO cluesStatistics(String beginCreateTime, String endCreateTime){
+
+
+        LineChartVO lineChartVO = new LineChartVO();
+        LineSeriesVO lineSeriesVONew = new LineSeriesVO();
+        LineSeriesVO lineSeriesVOSum = new LineSeriesVO();
+
+        //解析出时间段的每天数据
+        List<String> dates = null;
+        try {
+            dates = findDates(beginCreateTime, endCreateTime);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        //查询出每天新增和每天总线索数量
+        //1.1查询出当前时间段第一天的总线索数量
+        Integer sum = reportMpper.getCluesAll("1970-1-1", dates.get(0));
+        //1.2查询出当前时间段第一天的新增线索数量
+        Integer newNum = reportMpper.getCluesAll(dates.get(0), dates.get(0));
+        //封装第一天时间
+        lineChartVO.getxAxis().add(dates.get(0));
+        //封装LineSeriesVO：存储线索总数量
+        lineSeriesVOSum.setName("线索总数量");
+        lineSeriesVOSum.getData().add(sum);
+        //封装LineSeriesVO：新增线索数量
+        lineSeriesVONew.setName("新增线索数量");
+        lineSeriesVONew.getData().add(newNum);
+
+        //遍历排除第一天的数据
+        for (String date : dates) {
+            //跳过第一天
+            if(dates.get(0).equals(date)) {
+                continue;
+            }
+
+            //封装时间
+            lineChartVO.getxAxis().add(date);
+
+            //查询出新增的线索数量
+            newNum = reportMpper.getCluesAll(date, date);
+            //将数据添封装
+            lineSeriesVONew.getData().add(newNum);
+
+            //封装总数
+            sum += newNum;
+            lineSeriesVOSum.getData().add(sum);
+        }
+
+        lineChartVO.getSeries().add(lineSeriesVONew);
+        lineChartVO.getSeries().add(lineSeriesVOSum);
+
+        return lineChartVO;
+    }
+
+    public void test() {
+
+        List<String> s = new ArrayList();
+        s.forEach(new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+                System.out.println(s);
+            }
+        });
+       s.forEach(a -> System.out.println(a));
+    }
+
+    /**
+     * 转换率计算
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @Override
+    public VulnerabilityMapVo getVulnerabilityMap(String beginCreateTime, String endCreateTime) {
+
+        VulnerabilityMapVo vulnerabilityMapVo = new VulnerabilityMapVo();
+        //线索数量
+        vulnerabilityMapVo.setCluesNums(reportMpper.getCluesAll(beginCreateTime, endCreateTime));
+        //查询有效线索数
+        vulnerabilityMapVo.setEffectiveCluesNums(reportMpper.getEffectiveCluesNums(beginCreateTime, endCreateTime));
+        //查询商机数:直接添加的商机不算
+        vulnerabilityMapVo.setBusinessNums(reportMpper.getReportBusinessNums(beginCreateTime, endCreateTime));
+        //查询合同数量：直接添加的合同不算
+        vulnerabilityMapVo.setContractNums(reportMpper.getReportContractNums(beginCreateTime, endCreateTime));
+
+        return vulnerabilityMapVo;
+    }
+
+    /**
+     * 商机转换龙虎榜
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @Override
+    public List<BusinessChangeStatisticsVo> getBusinessChangeStatistics(String beginCreateTime, String endCreateTime) {
+        //查询员工转换合同的数量
+        List<BusinessChangeStatisticsVo> lists = reportMpper.getBusinessChangeStatistics(beginCreateTime, endCreateTime);
+        //所有商机数
+        Integer cluesAll = reportMpper.getBusiness("1970-01-01", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        //计算转换率
+        for (BusinessChangeStatisticsVo list1 : lists) {
+            list1.setRadio(divide(divide(list1.getNum(), cluesAll, 4), 0.01, 2));
+        }
+        List<BusinessChangeStatisticsVo> collect = lists.stream().sorted((o1, o2) -> o1.getRadio() - o2.getRadio() < 0 ? 1 : -1).collect(Collectors.toList());
+        return collect;
+    }
+
+    /**
+     23      * 两个double类型的数相除，保留两位小数
+     24      * @param a
+     25      * @param b
+     26      * @param scale
+     27      * @return
+     28      */
+     public static double divide(double a, double b, int scale){
+         BigDecimal bd1 = new BigDecimal(Double.toString(a));
+         BigDecimal bd2 = new BigDecimal(Double.toString(b));
+         return bd1.divide(bd2, scale, BigDecimal.ROUND_HALF_UP).doubleValue();
+     }
+
+    @Override
+    public List<BusinessChangeStatisticsVo> getsalesStatistic(String beginCreateTime, String endCreateTime) {
+        //查询员工转换商机的数量
+        List<BusinessChangeStatisticsVo> lists = reportMpper.getsalesStatistic(beginCreateTime, endCreateTime);
+        //查询员工所有的线索数：个人转化率
+        //List<BusinessChangeStatisticsVo> listAll = reportMpper.getCluesNumByNmaes(beginCreateTime, endCreateTime);
+        Integer cluesAll = reportMpper.getCluesAll("1970-01-01", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        //计算转换率
+        for (BusinessChangeStatisticsVo list1 : lists) {
+            list1.setRadio(divide(divide(list1.getNum(), cluesAll, 4), 0.01, 2));
+        }
+        List<BusinessChangeStatisticsVo> collect = lists.stream().sorted((o1, o2) -> o1.getRadio() - o2.getRadio() < 0 ? 1 : -1).collect(Collectors.toList());
+        return collect;
     }
 
 }

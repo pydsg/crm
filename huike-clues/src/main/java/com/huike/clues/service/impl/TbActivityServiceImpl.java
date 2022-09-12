@@ -74,8 +74,7 @@ public class TbActivityServiceImpl implements ITbActivityService {
     public int insertTbActivity(TbActivity tbActivity){
         tbActivity.setCreateTime(DateUtils.getNowDate());
         //----------优化code重复问题，使用uuid来避免重复-----------
-        //已修改code生成的方法，改用uuid来避免重复
-        tbActivity.setCode(getCode());
+        tbActivity.setCode(UUIDUtils.getUUID());
         //---------------------
         tbActivity.setStatus("2");
         int rows= tbActivityMapper.insertTbActivity(tbActivity);
@@ -148,12 +147,7 @@ public class TbActivityServiceImpl implements ITbActivityService {
      */
     private String getCode(){
         //随机8位编码
-        //String code= StringUtils.getRandom(8);
-
-        //-------------优化---------------
-        //修改code生成的方法，改用uuid来避免重复
-        String code = UUIDUtils.getUUID();
-        //-------------优化---------------
+        String code= StringUtils.getRandom(8);
 
         //店铺校验
         Set<String> codeSets =  redisCache.getCacheSet(Constants.ACT_CODE_KEY);

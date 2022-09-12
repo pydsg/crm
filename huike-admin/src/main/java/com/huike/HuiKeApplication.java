@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -18,7 +19,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class})
 @EnableScheduling
-public class HuiKeApplication implements CommandLineRunner {
+@ServletComponentScan
+public class HuiKeApplication { //implements CommandLineRunner {
 
     @Autowired
     private ITbActivityService activityService;
@@ -27,7 +29,7 @@ public class HuiKeApplication implements CommandLineRunner {
         SpringApplication.run(HuiKeApplication.class, args);
     }
 
-    @Override
+    /*@Override
     public void run(String... args)  {
         try{
             //加载所有活动code到缓存
@@ -35,6 +37,6 @@ public class HuiKeApplication implements CommandLineRunner {
         }catch (Exception ex){
             ex.printStackTrace();
         }
-    }
+    }*/
 }
 

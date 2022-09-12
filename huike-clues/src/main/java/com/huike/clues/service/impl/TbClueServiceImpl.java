@@ -411,40 +411,76 @@ public class TbClueServiceImpl implements ITbClueService {
 	@Override
 	public ImportResultDTO importCluesData(TbClueExcelVo data) {
 		//===============校验线索数据，封装属性，插入数据库，根据规则进行分配======================
+		TbClue tbClue = new TbClue();
 		/**
 		 * 1 判断活动编号对应的活动是否存在
 		 * 1.1 如果活动编号不存在 即错误数据，不进行添加操作，返回错误 ImportResultDTO.error()
 		 * 1.2 如果活动编号存在 设置活动id
 		 */
+		String activityCode = data.getActivityCode();
+		TbActivity tbActivity = tbActivityMapper.selectTbActivityByCode(activityCode);
+		if(null == activityCode || null == tbActivity) {
+			return ImportResultDTO.error();
+		}
+		tbClue.setActivityId(tbActivity.getId());
 		//TODO 补全上述逻辑代码
 		/**
 		 * 校验手机号和渠道是否为空
 		 * 如果为空证明是错误数据，不进行添加 返回error
 		 * return ImportResultDTO.error();
 		 */
+		String cluePhone = data.getPhone();
+		String clueChannel = data.getChannel();
+		if(StringUtils.isBlank(cluePhone) || StringUtils.isBlank(clueChannel)) {
+			return ImportResultDTO.error();
+		}
+		tbClue.setPhone(cluePhone);
+		//查询出渠道id
+		tbClue.setChannel(sysDictDataMapper.selectDictValue(TbClue.ImportDictType.CHANNEL.getDictType(), clueChannel));
 		//TODO 补全上述逻辑代码
 		/**
 		 * 字典值的替换
 		 * 因为excel里传入的是中文名，需要替换成对应的字典值
 		 * 需要处理 学科 性别 意向级别
 		 */
+		String clueSubject = data.getSubject();
+		String clueLevel = data.getLevel();
+		String clueSex = data.getSex();
+		if(!StringUtils.isBlank(clueSubject)) {
+			tbClue.setSubject(sysDictDataMapper.selectDictValue(TbClue.ImportDictType.SUBJECT.getDictType(), clueSubject));
+		}
+		if(!StringUtils.isBlank(clueLevel)) {
+			tbClue.setLevel(sysDictDataMapper.selectDictValue(TbClue.ImportDictType.LEVEL.getDictType(), clueLevel));
+		}
+		if(!StringUtils.isBlank(clueSex)) {
+			tbClue.setSex(sysDictDataMapper.selectDictValue(TbClue.ImportDictType.SEX.getDictType(), clueSex));
+		}
+
 		//TODO 补全上述逻辑代码
 		/**
 		 * 设置数据状态为待跟进
 		 * clue.setStatus(TbClue.StatusType.UNFOLLOWED.getValue());
 		 */
+		tbClue.setStatus(TbClue.StatusType.UNFOLLOWED.getValue());
 		//TODO 补全上述逻辑代码
 		/**
 		 * 将线索数据入库
 		 * 参考添加线索接口调用的mapper
 		 * 仅仅只插入到线索表中
  		 */
+		//补全必要信息
+		tbClue.setName(data.getName());
+		tbClue.setCreateBy(SecurityUtils.getUsername());
+		tbClue.setCreateTime(new Date());
+		//添加进数据库
+		tbClueMapper.insertTbClue(tbClue);
 		//TODO 补全上述逻辑代码
 		/**
 		 * 根据规则动态分配线索给具体的销售人员
 		 * 利用策略模式来进行实现
 		 * rule.loadRule(clue);
 		 */
+		rule.loadRule(tbClue);
 		//TODO 补全上述逻辑代码
 
 		/**
@@ -454,4 +490,5 @@ public class TbClueServiceImpl implements ITbClueService {
 		return ImportResultDTO.success();
 
 	}
+
 }

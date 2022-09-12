@@ -1,5 +1,6 @@
 package com.huike.web.controller.business;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -46,8 +47,25 @@ public class TbBusinessTrackRecordController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:record:list')")
     @GetMapping("/list")
     public  AjaxResult list(@RequestParam("businessId")Long id){
+        //查询跟踪记录
+        List<TbBusinessTrackRecord> tbBusinessTrackRecord = tbBusinessTrackRecordService.getBusinessTrackRecordByList(id);
+        //封装沟通重点数据数据
+        setKeys(tbBusinessTrackRecord);
+        return AjaxResult.success(tbBusinessTrackRecord);
+    }
 
-        return null;
+    /**
+     * 封装沟通重点数据数据
+     */
+    public void setKeys(List<TbBusinessTrackRecord> tbBusinessTrackRecord) {
+        for (TbBusinessTrackRecord businessTrackRecord : tbBusinessTrackRecord) {
+            //查询沟通重点具体集合
+            String communication_point = sysDictDataService.selectDictLabel("communication_point", businessTrackRecord.getKeyItems());
+            //转换为集合：小问题：没将字符串转换为集合，直接将字符串赋给了集合的第一个元素
+            ArrayList<String> communication_points = new ArrayList<>();
+            //封装
+            businessTrackRecord.setKeys(communication_points);
+        }
     }
 
     /**
@@ -57,6 +75,7 @@ public class TbBusinessTrackRecordController extends BaseController {
     @Log(title = "商机跟进记录", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody BusinessTrackVo businessTrackVo){
-        return null;
+        tbBusinessTrackRecordService.addBusinessTrackRecord(businessTrackVo);
+        return AjaxResult.success();
     }
 }

@@ -89,6 +89,11 @@ public class RuleStrategy implements Rule {
      */
     @Override
     public Integer transforBusiness(TbBusiness tbBusiness) {
+        //空指针处理
+        if(null == tbBusiness.getSubject()) {
+            //不进行分配，不添加分配记录-----即待分配状态
+            return 1;
+        }
         //注意处理空指针的问题
         if(tbBusiness.getSubject().equals(subjectJAVA.getDictLabel())){
             //如果意向学科是java--分配给lisi

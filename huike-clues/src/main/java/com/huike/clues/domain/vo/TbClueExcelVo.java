@@ -46,6 +46,14 @@ public class TbClueExcelVo{
     @ExcelProperty(value = "QQ",index = 9)
     private String qq;
 
+    public String getSex(){
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
     public String getPhone() {
         return phone;
     }

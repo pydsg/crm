@@ -1,7 +1,11 @@
 package com.huike.report.mapper;
 
+import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Map;
 
+import com.huike.report.domain.vo.BusinessChangeStatisticsVo;
+import com.huike.report.domain.vo.CourseNumVO;
 import org.apache.ibatis.annotations.Param;
 
 import com.huike.clues.domain.vo.IndexStatisticsVo;
@@ -57,10 +61,58 @@ public interface ReportMapper {
 						  @Param("endTime") String endCreateTime,
 						  @Param("username") String username);
 
+
 	/**=========================================今日简报========================================*/
+	Integer getCluesCountByNowDate(@Param("startTime") String beginCreateTime,
+								   @Param("endTime") String endCreateTime,
+								   @Param("username") String username);
 
+	Integer getBusinessCountByNowDate(@Param("startTime") String beginCreateTime,
+									  @Param("endTime") String endCreateTime,
+									  @Param("username") String username);
 
+	Integer getContractCountByNowDate(@Param("startTime") String beginCreateTime,
+									  @Param("endTime") String endCreateTime,
+									  @Param("username") String username);
+
+	Double getSalesAmountByNowDate(@Param("startTime") String beginCreateTime,
+									@Param("endTime") String endCreateTime,
+								   @Param("username") String username);
 
 	/**=========================================待办========================================*/
+
+	Integer getNoCluesReport(@Param("startTime") String beginCreateTime,
+						@Param("endTime") String endCreateTime);
+
+	Integer getNoBusinessReport(@Param("startTime") String beginCreateTime,
+								@Param("endTime") String endCreateTime);
+
+	//学科数量
+    List<CourseNumVO> courseStatistics(@Param("startTime") String beginCreateTime,
+									   @Param("endTime") String endCreateTime);
+	//查询所有线索
+	Integer getCluesAll(@Param("startTime") String beginCreateTime,
+						@Param("endTime") String endCreateTime);
+
+	Integer getEffectiveCluesNums(@Param("startTime") String beginCreateTime,
+								  @Param("endTime") String endCreateTime);
+
+	Integer getReportBusinessNums(@Param("startTime") String beginCreateTime,
+								  @Param("endTime") String endCreateTime);
+
+	Integer getReportContractNums(@Param("startTime") String beginCreateTime,
+								  @Param("endTime") String endCreateTime);
+
+	List<BusinessChangeStatisticsVo> getsalesStatistic(@Param("startTime") String beginCreateTime,
+																 @Param("endTime") String endCreateTime);
+
+	List<BusinessChangeStatisticsVo> getCluesNumByNmaes(@Param("startTime") String beginCreateTime,
+														@Param("endTime") String endCreateTime);
+
+	List<BusinessChangeStatisticsVo> getBusinessChangeStatistics(@Param("startTime") String beginCreateTime,
+																 @Param("endTime") String endCreateTime);
+
+	Integer getBusiness(@Param("startTime") String beginCreateTime,
+						@Param("endTime") String endCreateTime);
 
 }

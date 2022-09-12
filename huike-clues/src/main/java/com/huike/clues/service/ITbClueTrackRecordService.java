@@ -1,6 +1,9 @@
 package com.huike.clues.service;
 
 
+import com.huike.clues.domain.vo.ClueTrackRecordVo;
+import com.huike.common.core.page.TableDataInfo;
+
 /**
  * 线索跟进记录Service接口
  * 
@@ -10,4 +13,7 @@ package com.huike.clues.service;
 public interface ITbClueTrackRecordService {
 
 
+    void addClueTrackRecord(ClueTrackRecordVo tbClueTrackRecord);
+
+    TableDataInfo selectByClueId(Long clueId);
 }

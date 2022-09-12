@@ -1,5 +1,6 @@
 package com.huike.report.service;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -107,5 +108,17 @@ public interface IReportService {
      */
     IndexBaseInfoVO getBaseInfo(String beginCreateTime, String endCreateTime);
 
+    IndexTodayInfoVO getIndexTodoInfo();
 
+    IndexTodoInfoVO getIndexTodayInfo(String beginCreateTime, String endCreateTime);
+
+    List<CourseNumVO> courseStatistics(String beginCreateTime, String endCreateTime);
+
+    LineChartVO cluesStatistics(String beginCreateTime, String endCreateTime) throws ParseException;
+
+    VulnerabilityMapVo getVulnerabilityMap(String beginCreateTime, String endCreateTime);
+
+    List<BusinessChangeStatisticsVo> getBusinessChangeStatistics(String beginCreateTime, String endCreateTime);
+
+    List<BusinessChangeStatisticsVo> getsalesStatistic(String beginCreateTime, String endCreateTime);
 }

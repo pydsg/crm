@@ -1,9 +1,11 @@
 package com.huike.web.controller.report;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
 import com.huike.report.domain.vo.LineChartVO;
+import com.huike.report.domain.vo.VulnerabilityMapVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +41,18 @@ public class ReportController extends BaseController {
     }
 
     /**
+     * 客户学科统计
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @GetMapping("/subjectStatistics/{beginCreateTime}/{endCreateTime}")
+    public AjaxResult courseStatistics(@PathVariable String beginCreateTime,
+                                       @PathVariable String endCreateTime) {
+        return AjaxResult.success(reportService.courseStatistics(beginCreateTime,endCreateTime));
+    }
+
+    /**
      * 销售统计
      * @param beginCreateTime
      * @param endCreateTime
@@ -49,7 +63,29 @@ public class ReportController extends BaseController {
         return reportService.salesStatistics(beginCreateTime,endCreateTime);
     }
 
+    /**
+     * 新增线索数量统计
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @GetMapping("/cluesStatistics/{beginCreateTime}/{endCreateTime}")
+    public LineChartVO cluesStatistics(@PathVariable String beginCreateTime,
+                                       @PathVariable String endCreateTime) throws ParseException {
+        return reportService.cluesStatistics(beginCreateTime,endCreateTime);
+    }
 
+    /**
+     * 转换率计算
+     * @param beginCreateTime
+     * @param endCreateTime
+     * @return
+     */
+    @GetMapping("/getVulnerabilityMap/{beginCreateTime}/{endCreateTime}")
+    public AjaxResult getVulnerabilityMap(@PathVariable String beginCreateTime,
+                                                  @PathVariable String endCreateTime) {
+        return AjaxResult.success(reportService.getVulnerabilityMap(beginCreateTime, endCreateTime));
+    }
 
     /**
      * 渠道统计
@@ -147,6 +183,5 @@ public class ReportController extends BaseController {
         List<ActivityStatisticsVo> list= reportService.activityStatisticsList(activity);
         return getDataTablePage(list);
     }
-
 
 }
